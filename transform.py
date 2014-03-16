@@ -9,6 +9,23 @@ import numpy as np
 from scipy import misc, ndimage
 import matplotlib.pyplot as plt
 
+def morton_encode(x, y):
+    z = 0
+    for i in xrange(max(x.bit_length(),y.bit_length())):
+        z += (x&1)*2**(2*i+1) + (y&1)*2**(2*i)
+        x >>= 1
+        y >>= 1
+    return z
+
+def morton_decode(z):
+    x = 0
+    y = 0
+    for i in xrange(z.bit_length()/2+1):
+        x += ((z&2)>>1)*2**i
+        y += (z&1)*2**i
+        z >>= 2
+    return (x, y)
+
 def shift(output_coords):
     return (output_coords[0], output_coords[1] - 512, output_coords[2])
 
@@ -50,27 +67,42 @@ def unrotate(output_coords, image_size, center_lat, center_lon):
     lon2 = rotated_lon(lat, lon, center_lat, center_lon)
     return (-image_size[0]*(lat2/180 - 0.5), image_size[1]*(lon2/360 + 0.5), output_coords[2])
 
-earth = misc.imread("land_shallow_topo_350.jpg")
-shifted = ndimage.interpolation.geometric_transform(earth, rotate, mode = 'wrap', extra_arguments = (earth.shape, 45, 45))
-original = ndimage.interpolation.geometric_transform(shifted, unrotate, mode = 'wrap', extra_arguments = (shifted.shape, 45, 45))
+x = 1
+y = 11
 
-#c1 = np.arange(0,32,1, dtype = 'double')
-#c2 = np.arange(0,64,1, dtype = 'double')
+z = morton_encode(x,y)
+x1, y1 = morton_decode(z)
+
+print bin(x)
+print bin(y)
+print bin(z)
+print bin(x1)
+print bin(y1)
+
+
+
+
+#earth = misc.imread("land_shallow_topo_350.jpg")
+#shifted = ndimage.interpolation.geometric_transform(earth, rotate, mode = 'wrap', extra_arguments = (earth.shape, 45, 45))
+#original = ndimage.interpolation.geometric_transform(shifted, unrotate, mode = 'wrap', extra_arguments = (shifted.shape, 45, 45))
 #
-#lats = -180*(c1/c1.size - 0.5)
-#lons = 360*(c2/c2.size - 0.5)
-#
-#print lats
-#
-#glon, glat = np.meshgrid(lons, lats)
-#rlat = original_lat(glat,glon,45,0)
-#
-#
-#
-#plt.imshow(-c1.size*(rlat/180 - 0.5),extent=[c2[0],c2[-1],c1[0],c1[-1]])
-#plt.colorbar()
-plt.figure(1)
-plt.imshow(shifted)
-plt.figure(2)
-plt.imshow(original)
-plt.show()
+##c1 = np.arange(0,32,1, dtype = 'double')
+##c2 = np.arange(0,64,1, dtype = 'double')
+##
+##lats = -180*(c1/c1.size - 0.5)
+##lons = 360*(c2/c2.size - 0.5)
+##
+##print lats
+##
+##glon, glat = np.meshgrid(lons, lats)
+##rlat = original_lat(glat,glon,45,0)
+##
+##
+##
+##plt.imshow(-c1.size*(rlat/180 - 0.5),extent=[c2[0],c2[-1],c1[0],c1[-1]])
+##plt.colorbar()
+#plt.figure(1)
+#plt.imshow(shifted)
+#plt.figure(2)
+#plt.imshow(original)
+#plt.show()
